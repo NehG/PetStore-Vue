@@ -1,14 +1,14 @@
 import Vuex from "vuex"
 import axios from "axios"
-import { omit } from "lodash"
+import { omit, cloneDeep } from "lodash"
 import logger from "@/helpers/logger"
 import MockAdaptor from "axios-mock-adapter"
 import { createLocalVue } from "@vue/test-utils"
-import { createStore, products } from "../boilerplate"
+import { createStore, products as mockProducts } from "../boilerplate"
 
 describe("PRODUCTS", () => {
 	// declare axios and store variables for tests
-	let store, localVue
+	let store, localVue, products
 
 	localVue = createLocalVue()
 	localVue.use(Vuex)
@@ -16,6 +16,7 @@ describe("PRODUCTS", () => {
 	// before each and every test, instantiate mockAxios and store from scratch
 	beforeEach(() => {
 		store = createStore()
+		products = cloneDeep(mockProducts)
 	})
 
 	// testing products/getters in isolation
@@ -87,10 +88,9 @@ describe("PRODUCTS", () => {
 		})
 
 		it("'addProduct' takes payload [parameter] and sets to 'state/list'", () => {
-			const state = { list: null }
+			const state = { list: [] }
 
-			// api on POST responds back with updated payload/list
-			products.mutations.addProduct(state, [{ id: 1 }])
+			products.mutations.addProduct(state, { id: 1 })
 
 			expect(products.getters.products(state)).toEqual([{ id: 1 }])
 		})
@@ -98,8 +98,7 @@ describe("PRODUCTS", () => {
 		it("'removeProduct' takes payload [parameter] and sets to 'state/list'", () => {
 			const state = { list: [{ id: 1 }, { id: 2 }] }
 
-			// api on DELETE responds back with updated payload/list
-			products.mutations.removeProduct(state, [{ id: 2 }])
+			products.mutations.removeProduct(state, 1)
 
 			expect(products.getters.products(state)).toEqual([{ id: 2 }])
 		})
@@ -202,7 +201,6 @@ describe("PRODUCTS", () => {
 
 				await store.dispatch("products/addNewProduct", payload)
 
-				// Note: API sends back response with new inserted item, so we just set state to response
 				expect(store.commit).toBeCalledWith(
 					"products/addProduct",
 					payload,
@@ -216,7 +214,7 @@ describe("PRODUCTS", () => {
 				await store.dispatch("products/addNewProduct", omit(payload, "id"))
 
 				// Note: API sends back response with new inserted item, so we just set state to response
-				expect(store.getters["products/products"]).toEqual(payload)
+				expect(store.getters["products/products"]).toContainEqual(payload)
 			})
 		})
 
@@ -224,7 +222,7 @@ describe("PRODUCTS", () => {
 		describe("ACTION: removeProductById", () => {
 			it("it should `commit` 'updateLastFetchToNow' [actions/removeProductById]", async () => {
 				store.commit = jest.fn()
-				mockAxios.onDelete("/products/1").reply(200, [])
+				mockAxios.onDelete("/products/1").reply(200)
 
 				await store.dispatch("products/removeProductById", 1)
 
@@ -237,24 +235,22 @@ describe("PRODUCTS", () => {
 
 			it("it should `commit` 'removeProduct'", async () => {
 				store.commit = jest.fn()
-				mockAxios.onDelete("/products/1").reply(200, [{ id: 2 }])
+				mockAxios.onDelete("/products/1").reply(200)
 
 				await store.dispatch("products/removeProductById", 1)
 
-				// Note: API sends back response excluding removed item, so we just set state to response
 				expect(store.commit).toBeCalledWith(
 					"products/removeProduct",
-					[{ id: 2 }],
+					1,
 					undefined
 				)
 			})
 
 			it("it should commit exact data to `state.list` i.e. `products/products` getter [actions/removeProductById]", async () => {
-				mockAxios.onDelete("/products/1").reply(200, [{ id: 2 }])
+				store = createStore({ list: [{ id: 1 }, { id: 2 }] })
 
 				await store.dispatch("products/removeProductById", 1)
 
-				// Note: API sends back response excluding removed item, so we just set state to response
 				expect(store.getters["products/products"]).toEqual([{ id: 2 }])
 			})
 		})

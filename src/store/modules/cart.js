@@ -5,9 +5,7 @@ import logger from "@/helpers/logger"
 import {
 	PersitentStorage,
 	isPersistedDataRetrivable,
-	persistentStorageDisabled,
-	isPersistedDataEmpty,
-	isPersistedDataExpired
+	persistentStorageDisabled
 } from "../../helpers/persistentStorage"
 
 // API URL(baseURL + <URL>)
@@ -41,11 +39,15 @@ export default {
 		},
 		addItemToCart: (state, payload) => {
 			// state.cart[payload.cId] = _.omit(payload, "cId")
-			state.list = payload
+			// state.list = payload
+			state.list.push(payload)
 		},
-		removeItemFromCart: (state, payload) => {
+		removeItemFromCart: (state, cId) => {
 			// delete state.list[cId]
-			state.list = payload
+			// state.list = payload
+			state.list = _.filter(state.list, function(item) {
+				return item.cId !== cId
+			})
 		},
 		rehydrate(state, lastFetch) {
 			const rehydratedCart = PersitentStorage.rehydrate()
@@ -100,8 +102,8 @@ export default {
 			}),
 
 		removeCartItemById: ({ commit, dispatch }, cId) =>
-			API.DELETE(URL, cId).then(payload => {
-				commit("removeItemFromCart", payload)
+			API.DELETE(URL, cId).then(() => {
+				commit("removeItemFromCart", cId)
 				commit("updateLastFetchToNow")
 				dispatch("snapshotCartItemsToPersistentStorage")
 			})

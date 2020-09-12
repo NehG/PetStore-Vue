@@ -94,7 +94,7 @@ export default {
 		productImageRules: [
 			v => !!v || "Product Image URL is required",
 			v =>
-				/(http(s?):)([/|.|\w|\s|-])*\.(?:jpg|gif|png)/.test(v) ||
+				/(http(s?):)([/|.|\w|\s|-])*\.(?:jpg|gif|png|jpeg)/.test(v) ||
 				"Image URL must be valid"
 		],
 		price: "",

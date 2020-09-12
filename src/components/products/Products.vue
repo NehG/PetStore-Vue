@@ -18,12 +18,7 @@
 				max-width="800"
 			>
 				<v-row class="justify-center"
-					>Tune in, we will be right back! with new products.
-					<br />
-					<small
-						>NOTE: CodeSandBox (Backend Server) hibernates and reloades every 30
-						mins. So, please try refeshing page or add a new product.</small
-					>
+					>Tune in, we will be right back! with new products. 🛍
 				</v-row>
 			</v-alert>
 			<v-row v-else align="center" no-gutters>

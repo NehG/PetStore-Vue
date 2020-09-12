@@ -1,4 +1,4 @@
-import { get } from "lodash"
+import _ from "lodash"
 import moment from "moment"
 import API from "@/store/api"
 
@@ -16,7 +16,7 @@ export default {
 		products: state => state.list,
 		isLoading: state => state.isLoading,
 		lastFetch: state => state.lastFetch,
-		isProductsListEmpty: state => get(state, "list", []).length === 0
+		isProductsListEmpty: state => _.get(state, "list", []).length === 0
 	},
 	mutations: {
 		setLoading: (state, bool) => {
@@ -30,11 +30,15 @@ export default {
 		},
 		addProduct: (state, payload) => {
 			// state.list[payload.id] = _.omit(payload, "id")
-			state.list = payload // api is config to return updated payload
+			// state.list = payload // api is config to return updated payload
+			state.list.push(payload)
 		},
-		removeProduct: (state, payload) => {
+		removeProduct: (state, id) => {
 			// delete state.list[id]
-			state.list = payload // api is config to return updated payload so no point 'delete state.list[id]'
+			// state.list = payload // api is config to return updated payload so no point 'delete state.list[id]'
+			state.list = _.filter(state.list, function(item) {
+				return item.id !== id
+			})
 		}
 	},
 	actions: {
@@ -55,8 +59,8 @@ export default {
 				context.commit("updateLastFetchToNow")
 			}),
 		removeProductById: (context, id) =>
-			API.DELETE(URL, id).then(payload => {
-				context.commit("removeProduct", payload)
+			API.DELETE(URL, id).then(() => {
+				context.commit("removeProduct", id)
 				context.commit("updateLastFetchToNow")
 			})
 	}
